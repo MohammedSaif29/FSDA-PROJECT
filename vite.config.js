@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: "./",
+  base: "/FSDA-PROJECT/",
   plugins: [react()],
   build: {
     outDir: 'docs',
