@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  /* Colors - Premium Dark/Vibrant Palette */
   --bg-primary: #0a0b10;
   --bg-secondary: #12131c;
   --bg-tertiary: #1c1d29;
@@ -56,8 +55,6 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
 h1,
@@ -89,9 +86,7 @@ ul {
   list-style: none;
 }
 
-/* =========================================
-   UTILITIES
-   ========================================= */
+
 
 .glass-effect {
   background: var(--glass-bg);

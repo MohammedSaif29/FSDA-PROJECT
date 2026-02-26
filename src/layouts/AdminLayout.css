@@ -1,0 +1,231 @@
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    min-width: 100vw;
+    background-color: #f1f5f9;
+    /* Slightly darker to make glassmorphism pop */
+    color: #1e293b;
+    font-family: 'Inter', sans-serif;
+}
+
+
+.admin-sidebar {
+    width: 260px;
+    background-color: white;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+}
+
+.admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-logo-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #1e293b;
+    /* Slate 800 */
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-logo-icon .text-white {
+    color: white;
+}
+
+.admin-brand-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.admin-nav {
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* Tighter gap, items pad themselves */
+    flex: 1;
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* More distinct gap between icon and text */
+    padding: 0.875rem 1rem;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-nav-link:hover {
+    background-color: rgba(241, 245, 249, 0.7);
+    color: #1e293b;
+}
+
+.admin-nav-link.active {
+    background-color: #eef2ff;
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+.admin-sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.admin-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.admin-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+}
+
+.admin-user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.admin-user-role {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.admin-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ef4444;
+    /* red */
+    background: none;
+    border: none;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.admin-logout-btn:hover {
+    color: #dc2626;
+}
+
+/* Main Area */
+.admin-main {
+    flex: 1;
+    margin-left: 260px;
+    /* offset for sidebar */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: calc(100vw - 260px);
+    max-width: calc(100vw - 260px);
+}
+
+.admin-header {
+    height: 72px;
+    background-color: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.admin-search-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 600px;
+    position: relative;
+}
+
+.admin-search-icon {
+    position: absolute;
+    left: 1rem;
+    color: #94a3b8;
+}
+
+.admin-search-input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.8rem;
+    border: none;
+    background-color: transparent;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.admin-search-input:focus {
+    outline: none;
+}
+
+.admin-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-icon-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.admin-icon-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.admin-content-area {
+    padding: 2.5rem 3rem;
+    flex: 1;
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+    /* Center layout when screen is larger than 1400 + sidebar */
+}
