@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg-primary: #0a0b10;
   --bg-secondary: #12131c;
@@ -753,6 +757,29 @@ textarea.form-control {
 .font-medium {
   font-weight: 500;
 }
+
+.dark {
+  --bg-primary: #040517;
+  --bg-secondary: #0b1222;
+  --bg-tertiary: #111827;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+}
+
+* {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    min-height: auto;
+  }
+  .glass-panel {
+    border-radius: 1rem;
+  }
+}
+
 
 .py-12 {
   padding-top: 3rem;

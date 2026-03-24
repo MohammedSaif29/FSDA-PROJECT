@@ -1,97 +1,90 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import './Login.css';
+import toast from 'react-hot-toast';
+import { login } from '../api/apiClient';
+import { setAuth } from '../hooks/useAuth';
+import Button from '../components/ui/Button';
+import InputField from '../components/ui/InputField';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('');
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (role === 'admin') {
-            navigate('/admin');
-        } else if (role === 'educator') {
-            navigate('/educator');
-        } else if (role === 'student') {
-            navigate('/student');
-        } else {
-            navigate('/');
-        }
-    };
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-    return (
-        <div className="login-page">
-            <div className="login-card">
-                <div className="login-header">
-                    <div className="login-logo-container">
-                        <BookOpen className="login-logo-icon" size={32} />
-                    </div>
-                    <h1>EduResource Hub</h1>
-                    <p>Sign in to access educational resources</p>
-                </div>
+  const validate = () => {
+    const newErrors = {};
 
-                <form onSubmit={handleSubmit} className="login-form">
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
+    if (!form.username.trim()) newErrors.username = 'Username is required';
+    if (!form.password.trim()) newErrors.password = 'Password is required';
 
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-                    <div className="form-group">
-                        <label htmlFor="role">Role</label>
-                        <select
-                            id="role"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            required
-                        >
-                            <option value="" disabled hidden>Select your role</option>
-                            <option value="student">Student</option>
-                            <option value="educator">Educator</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
 
-                    <button type="submit" className="login-btn">
-                        Sign In
-                    </button>
-                </form>
+    setLoading(true);
+    try {
+      const res = await login({ username: form.username, password: form.password });
+      setAuth({ username: res.username, role: res.role || 'USER' }, res.token);
+      toast.success('Welcome back, ' + res.username + '!');
+      navigate(res.role === 'ADMIN' ? '/admin/dashboard' : '/home');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <div className="login-footer">
-                    <a href="#" className="forgot-password">Forgot Password?</a>
-                    <a href="#" className="create-account">Create Account</a>
-                </div>
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#2d2f5975,_#06070f_80%)] text-white">
+      <div className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 overflow-hidden rounded-3xl border border-white/10 bg-slate-900/40 shadow-2xl backdrop-blur-xl md:grid-cols-2">
+        <aside className="flex flex-col items-start justify-center p-10 md:p-16">
+          <div className="mb-8 rounded-xl bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-200">EduVault Premium</div>
+          <h1 className="text-4xl font-bold leading-tight text-slate-100">Secure. Smart. Scholarly.</h1>
+          <p className="mt-4 text-slate-300">Continue to your learning vault, upload resources, and collaborate with your cohort in a modern, smooth UI.</p>
+          <div className="mt-8 space-y-3">
+            <p className="text-slate-300"><strong>Enterprise-grade features:</strong></p>
+            <ul className="ml-5 list-disc text-slate-400">
+              <li>JWT session management</li>
+              <li>Dark mode + responsive UX</li>
+              <li>Grid resource feed with filters</li>
+            </ul>
+          </div>
+        </aside>
 
-                <div className="demo-credentials">
-                    <h4>Demo Credentials:</h4>
-                    <p>Admin: admin@edu.com / admin123</p>
-                    <p>Educator: educator@edu.com / educator123</p>
-                    <p>Student: student@edu.com / student123</p>
-                </div>
+        <main className="p-8 sm:p-10">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="rounded-xl bg-indigo-500/10 p-2 text-indigo-300">
+              <BookOpen />
             </div>
-        </div>
-    );
+            <h2 className="text-2xl font-bold">Sign in to your account</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <InputField label="Username" name="username" value={form.username} onChange={handleChange} error={errors.username} icon={BookOpen} />
+            <InputField label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={errors.password} icon={BookOpen} />
+
+            <Button type="submit" loading={loading} className="w-full">Sign In</Button>
+          </form>
+
+          <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+            <span>Don’t have an account?</span>
+            <Link to="/register" className="text-indigo-300 hover:text-indigo-200">Create account</Link>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 };
 
 export default Login;
+
