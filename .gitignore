@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+backend/target/
+frontend-restart.log
+backend/backend-restart.log
+lint-output.txt
+lint-results.json
 
 # Editor directories and files
 .vscode/*

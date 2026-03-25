@@ -1,22 +1,19 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { getRedirectPathForRole, getRole, getUser } from '../hooks/useAuth';
 
-export default function PrivateRoute({ allowedRoles = [] }) {
+export default function PrivateRoute({ role, allowedRoles = [] }) {
   const token = localStorage.getItem('token');
-  const userJson = localStorage.getItem('user');
+  const storedRole = getRole();
+  const user = getUser();
 
-  if (!token || !userJson) {
+  if (!token || !storedRole || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  let user;
-  try {
-    user = JSON.parse(userJson);
-  } catch (e) {
-    return <Navigate to="/login" replace />;
-  }
+  const expectedRoles = role ? [role] : allowedRoles;
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'ADMIN' ? '/admin/dashboard' : '/home'} replace />;
+  if (expectedRoles.length > 0 && !expectedRoles.includes(storedRole)) {
+    return <Navigate to={getRedirectPathForRole(storedRole)} replace />;
   }
 
   return <Outlet />;

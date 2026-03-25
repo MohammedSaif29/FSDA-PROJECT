@@ -1,7 +1,6 @@
 package com.eduvault.eduvault.controller;
 
 import com.eduvault.eduvault.dto.FeedbackRequest;
-import com.eduvault.eduvault.dto.ResourceRequest;
 import com.eduvault.eduvault.model.Resource;
 import com.eduvault.eduvault.model.User;
 import com.eduvault.eduvault.service.DownloadService;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +36,11 @@ public class ResourceController {
     @GetMapping
     public ResponseEntity<List<Resource>> getResources() {
         return ResponseEntity.ok(resourceService.getApprovedResources());
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Resource>> getAllResources() {
+        return ResponseEntity.ok(resourceService.getAllApprovedResources());
     }
 
     @GetMapping("/search")

@@ -29,6 +29,12 @@ public class ResourceService {
 
     public Resource createResource(String title, String description, Resource.ResourceType type,
                                    String category, String author, String fileUrl, String imageUrl, User uploadedBy, boolean approved) {
+        return createResource(title, description, type, category, author, fileUrl, imageUrl, uploadedBy, approved, 0.0, 0, LocalDateTime.now());
+    }
+
+    public Resource createResource(String title, String description, Resource.ResourceType type,
+                                   String category, String author, String fileUrl, String imageUrl, User uploadedBy,
+                                   boolean approved, Double rating, Integer downloadsCount, LocalDateTime createdAt) {
         Resource resource = new Resource();
         resource.setTitle(title);
         resource.setDescription(description);
@@ -36,15 +42,21 @@ public class ResourceService {
         resource.setCategory(category);
         resource.setAuthor(author);
         resource.setFileUrl(fileUrl);
-        resource.setImageUrl(imageUrl);
+        resource.setImageUrl((imageUrl == null || imageUrl.isBlank()) ? buildImageUrl(type, category) : imageUrl);
         resource.setUploadedBy(uploadedBy);
-        resource.setCreatedAt(LocalDateTime.now());
+        resource.setCreatedAt(createdAt);
         resource.setApproved(approved);
+        resource.setRating(rating);
+        resource.setDownloadsCount(downloadsCount);
         return resourceRepository.save(resource);
     }
 
     public List<Resource> getApprovedResources() {
         return resourceRepository.findByApprovedTrue();
+    }
+
+    public List<Resource> getAllApprovedResources() {
+        return resourceRepository.findByApprovedTrueOrderByCreatedAtDesc();
     }
 
     public List<Resource> getPendingResources() {
@@ -71,6 +83,13 @@ public class ResourceService {
         return resourceRepository.findById(id).orElseThrow(() -> new RuntimeException("Resource not found"));
     }
 
+    public List<Resource> getLatestResearchPapers(int limit) {
+        return resourceRepository.findByApprovedTrueOrderByCreatedAtDesc().stream()
+                .filter(resource -> resource.getType() == Resource.ResourceType.PAPER)
+                .limit(limit)
+                .toList();
+    }
+
     public Resource approveResource(Long id) {
         Resource resource = getResourceById(id);
         resource.setApproved(true);
@@ -89,5 +108,18 @@ public class ResourceService {
     public void updateRating(Resource resource) {
         // This will be called after saving feedback
         // Rating is updated in FeedbackService
+    }
+
+    public String buildImageUrl(Resource.ResourceType type, String category) {
+        if (category != null && !category.isBlank()) {
+            return "https://source.unsplash.com/400x300/?" + category.trim().toLowerCase().replace(" ", "-");
+        }
+        if (type == Resource.ResourceType.TEXTBOOK) {
+            return "https://source.unsplash.com/400x300/?book";
+        }
+        if (type == Resource.ResourceType.PAPER) {
+            return "https://source.unsplash.com/400x300/?research";
+        }
+        return "https://source.unsplash.com/400x300/?education";
     }
 }

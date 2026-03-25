@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
     List<Resource> findByApprovedTrue();
+    List<Resource> findByApprovedTrueOrderByCreatedAtDesc();
     List<Resource> findByApprovedFalse();
     List<Resource> findByCategoryAndApprovedTrue(String category);
     List<Resource> findByTypeAndApprovedTrue(Resource.ResourceType type);

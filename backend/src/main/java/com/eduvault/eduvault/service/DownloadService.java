@@ -19,18 +19,20 @@ public class DownloadService {
     private ResourceService resourceService;
 
     public Download recordDownload(User user, Resource resource) {
-        if (!downloadRepository.existsByUserAndResource(user, resource)) {
-            Download download = new Download();
-            download.setUser(user);
-            download.setResource(resource);
-            download.setDownloadedAt(LocalDateTime.now());
-            downloadRepository.save(download);
-            resourceService.incrementDownloadCount(resource);
-        }
-        return null; // or return the download if needed
+        Download download = new Download();
+        download.setUser(user);
+        download.setResource(resource);
+        download.setDownloadedAt(LocalDateTime.now());
+        Download savedDownload = downloadRepository.save(download);
+        resourceService.incrementDownloadCount(resource);
+        return savedDownload;
     }
 
     public List<Download> getUserDownloads(User user) {
-        return downloadRepository.findByUser(user);
+        return downloadRepository.findByUserOrderByDownloadedAtDesc(user);
+    }
+
+    public long countDownloads(User user) {
+        return downloadRepository.countByUser(user);
     }
 }

@@ -3,17 +3,19 @@
     min-height: 100vh;
     width: 100%;
     min-width: 100vw;
-    background-color: #f1f5f9;
-    /* Slightly darker to make glassmorphism pop */
-    color: #1e293b;
+    background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.18), transparent 32%),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 28%),
+        linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
     font-family: 'Inter', sans-serif;
 }
 
-
 .admin-sidebar {
     width: 260px;
-    background-color: white;
-    border-right: 1px solid #e2e8f0;
+    background: rgba(2, 6, 23, 0.92);
+    border-right: 1px solid rgba(148, 163, 184, 0.14);
+    backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -28,18 +30,18 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1.5rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .admin-logo-icon {
     width: 36px;
     height: 36px;
-    background-color: #1e293b;
-    /* Slate 800 */
-    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 0.875rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.35);
 }
 
 .admin-logo-icon .text-white {
@@ -50,7 +52,15 @@
     font-family: 'Outfit', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #f8fafc;
+}
+
+.admin-brand-caption {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
 }
 
 .admin-nav {
@@ -58,7 +68,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    /* Tighter gap, items pad themselves */
     flex: 1;
 }
 
@@ -66,30 +75,67 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    /* More distinct gap between icon and text */
     padding: 0.875rem 1rem;
-    color: #64748b;
+    color: #94a3b8;
     text-decoration: none;
-    border-radius: 0.5rem;
+    border-radius: 1rem;
     font-weight: 500;
     font-size: 0.95rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .admin-nav-link:hover {
-    background-color: rgba(241, 245, 249, 0.7);
-    color: #1e293b;
+    background-color: rgba(15, 23, 42, 0.9);
+    color: #f8fafc;
+    transform: translateX(2px);
 }
 
 .admin-nav-link.active {
-    background-color: #eef2ff;
-    color: #4f46e5;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(59, 130, 246, 0.18));
+    color: #c7d2fe;
     font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.28);
+}
+
+.admin-sidebar-highlight {
+    margin: 0 1rem 1.5rem;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 1.25rem;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.72));
+    display: flex;
+    gap: 0.875rem;
+}
+
+.admin-highlight-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.875rem;
+    background: rgba(99, 102, 241, 0.14);
+    color: #a5b4fc;
+    flex-shrink: 0;
+}
+
+.admin-highlight-title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.admin-highlight-text {
+    margin: 0.3rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #94a3b8;
 }
 
 .admin-sidebar-footer {
     padding: 1.5rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .admin-user-info {
@@ -102,12 +148,12 @@
 .admin-avatar {
     width: 40px;
     height: 40px;
-    background-color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: #cbd5e1;
 }
 
 .admin-user-details {
@@ -118,20 +164,21 @@
 .admin-user-name {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #1e293b;
+    color: #f8fafc;
 }
 
 .admin-user-role {
     font-size: 0.8rem;
     color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .admin-logout-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #ef4444;
-    /* red */
+    color: #fca5a5;
     background: none;
     border: none;
     padding: 0.5rem 0;
@@ -142,14 +189,12 @@
 }
 
 .admin-logout-btn:hover {
-    color: #dc2626;
+    color: #fecaca;
 }
 
-/* Main Area */
 .admin-main {
     flex: 1;
     margin-left: 260px;
-    /* offset for sidebar */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -158,43 +203,34 @@
 }
 
 .admin-header {
-    height: 72px;
-    background-color: white;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0 2rem;
+    min-height: 88px;
+    background: rgba(2, 6, 23, 0.76);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    padding: 1.25rem 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 40;
+    backdrop-filter: blur(18px);
 }
 
-.admin-search-container {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    max-width: 600px;
-    position: relative;
+.admin-header-kicker {
+    margin: 0;
+    color: #818cf8;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.74rem;
+    font-weight: 700;
 }
 
-.admin-search-icon {
-    position: absolute;
-    left: 1rem;
-    color: #94a3b8;
-}
-
-.admin-search-input {
-    width: 100%;
-    padding: 0.6rem 1rem 0.6rem 2.8rem;
-    border: none;
-    background-color: transparent;
-    font-size: 0.95rem;
-    color: #1e293b;
-}
-
-.admin-search-input:focus {
-    outline: none;
+.admin-header-title {
+    margin: 0.35rem 0 0;
+    color: #f8fafc;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .admin-header-actions {
@@ -203,22 +239,38 @@
     gap: 1rem;
 }
 
-.admin-icon-btn {
-    background: none;
-    border: none;
-    color: #64748b;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
+.admin-status-pill {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(15, 23, 42, 0.8);
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
-.admin-icon-btn:hover {
-    background-color: #f1f5f9;
-    color: #1e293b;
+.admin-header-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(248, 113, 113, 0.22);
+    background: rgba(127, 29, 29, 0.18);
+    color: #fecaca;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-header-logout-btn:hover {
+    background: rgba(127, 29, 29, 0.28);
+    border-color: rgba(248, 113, 113, 0.34);
+    transform: translateY(-1px);
 }
 
 .admin-content-area {
@@ -227,5 +279,38 @@
     max-width: 1600px;
     width: 100%;
     margin: 0 auto;
-    /* Center layout when screen is larger than 1400 + sidebar */
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .admin-main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .admin-layout {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-header,
+    .admin-content-area {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .admin-header {
+        align-items: flex-start;
+        gap: 1rem;
+        flex-direction: column;
+    }
 }

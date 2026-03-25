@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getResourceById } from '../api/apiClient';
+import { getResourceById, recordResourceDownload, recordResourceView, resolveBackendUrl, saveResourceItem } from '../api/apiClient';
 import { Minus, ArrowLeft, Download as DownloadIcon, Star, BookOpen } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Loader from '../components/ui/Loader';
 import { toast } from 'react-hot-toast';
+import { getUser } from '../hooks/useAuth';
 
 export default function ResourceDetail() {
   const { id } = useParams();
+  const user = getUser();
   const [resource, setResource] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [feedback, setFeedback] = useState('');
@@ -21,6 +23,9 @@ export default function ResourceDetail() {
         const data = await getResourceById(id);
         setResource(data);
         setReviews(data.reviews || []);
+        if (user?.role !== 'ADMIN') {
+          await recordResourceView(id);
+        }
       } catch (err) {
         setError('Could not load resource.');
       } finally {
@@ -51,9 +56,30 @@ export default function ResourceDetail() {
     toast.success('Feedback added');
   };
 
-  const handleDownload = () => {
-    if (!resource?.fileUrl) return toast.error('No file available.');
-    window.open(resource.fileUrl.startsWith('http') ? resource.fileUrl : `http://localhost:8080${resource.fileUrl}`, '_blank');
+  const handleDownload = async () => {
+    if (!resource) return;
+
+    try {
+      const response = await recordResourceDownload(resource.id);
+      if (response?.fileUrl) {
+        window.open(resolveBackendUrl(response.fileUrl), '_blank', 'noopener,noreferrer');
+      } else {
+        toast.success('Download tracked successfully.');
+      }
+    } catch {
+      // API layer handles errors
+    }
+  };
+
+  const handleSave = async () => {
+    if (!resource) return;
+
+    try {
+      await saveResourceItem(resource.id);
+      toast.success('Saved to your library');
+    } catch {
+      // API layer handles errors
+    }
   };
 
   if (loading) return <Loader message="Loading resource details..." />;
@@ -61,7 +87,7 @@ export default function ResourceDetail() {
 
   return (
     <div className="space-y-6">
-      <Link to="/resources" className="text-indigo-400 hover:text-indigo-200 inline-flex items-center gap-1 text-sm font-semibold">
+      <Link to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/student/explore'} className="text-indigo-400 hover:text-indigo-200 inline-flex items-center gap-1 text-sm font-semibold">
         <ArrowLeft className="h-4 w-4" /> Back to resources
       </Link>
 
@@ -69,7 +95,7 @@ export default function ResourceDetail() {
         <div className="grid gap-6 md:grid-cols-[280px_1fr]">
           <div className="relative overflow-hidden rounded-2xl bg-slate-800">
             {resource.imageUrl ? (
-              <img src={resource.imageUrl.startsWith('http') ? resource.imageUrl : `http://localhost:8080${resource.imageUrl}`} alt={resource.title} className="h-64 w-full object-cover" />
+              <img src={resolveBackendUrl(resource.imageUrl)} alt={resource.title} className="h-64 w-full object-cover" />
             ) : (
               <div className="flex h-64 items-center justify-center text-slate-500">
                 <BookOpen className="h-12 w-12" />
@@ -93,7 +119,7 @@ export default function ResourceDetail() {
 
             <div className="flex gap-3">
               <Button variant="primary" onClick={handleDownload}><DownloadIcon className="h-4 w-4" /> Download</Button>
-              <Button variant="secondary" onClick={() => toast('Saved to your library')} >Save</Button>
+              <Button variant="secondary" onClick={handleSave} >Save</Button>
             </div>
           </div>
         </div>

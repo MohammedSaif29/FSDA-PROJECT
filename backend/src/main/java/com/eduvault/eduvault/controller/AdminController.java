@@ -1,7 +1,14 @@
 package com.eduvault.eduvault.controller;
 
+import com.eduvault.eduvault.dto.AdminStatsResponse;
+import com.eduvault.eduvault.dto.AdminSavedResourceResponse;
+import com.eduvault.eduvault.dto.CategoryStatResponse;
+import com.eduvault.eduvault.dto.DownloadsTrendPoint;
+import com.eduvault.eduvault.dto.RecentActivityResponse;
 import com.eduvault.eduvault.model.Resource;
 import com.eduvault.eduvault.model.User;
+import com.eduvault.eduvault.service.AdminAnalyticsService;
+import com.eduvault.eduvault.service.AdminSavedResourceService;
 import com.eduvault.eduvault.service.ResourceService;
 import com.eduvault.eduvault.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,21 +26,37 @@ public class AdminController {
     private ResourceService resourceService;
 
     @Autowired
+    private AdminAnalyticsService adminAnalyticsService;
+
+    @Autowired
     private UserService userService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<?> getDashboardStats() {
-        long totalUsers = userService.getAllUsers().size();
-        long totalResources = resourceService.getApprovedResources().size() + resourceService.getPendingResources().size();
-        long pendingApprovals = resourceService.getPendingResources().size();
-        long totalDownloads = resourceService.getApprovedResources().stream().mapToInt(Resource::getDownloadsCount).sum();
+    @Autowired
+    private AdminSavedResourceService adminSavedResourceService;
 
-        return ResponseEntity.ok(Map.of(
-                "totalUsers", totalUsers,
-                "totalResources", totalResources,
-                "pendingApprovals", pendingApprovals,
-                "totalDownloads", totalDownloads
-        ));
+    @GetMapping("/stats")
+    public ResponseEntity<AdminStatsResponse> getDashboardStats() {
+        return ResponseEntity.ok(adminAnalyticsService.getStats());
+    }
+
+    @GetMapping("/downloads-trend")
+    public ResponseEntity<List<DownloadsTrendPoint>> getDownloadsTrend() {
+        return ResponseEntity.ok(adminAnalyticsService.getDownloadsTrend());
+    }
+
+    @GetMapping("/category-stats")
+    public ResponseEntity<List<CategoryStatResponse>> getCategoryStats() {
+        return ResponseEntity.ok(adminAnalyticsService.getCategoryStats());
+    }
+
+    @GetMapping("/recent-activity")
+    public ResponseEntity<List<RecentActivityResponse>> getRecentActivity() {
+        return ResponseEntity.ok(adminAnalyticsService.getRecentActivity());
+    }
+
+    @GetMapping("/saved-resources")
+    public ResponseEntity<List<AdminSavedResourceResponse>> getSavedResources() {
+        return ResponseEntity.ok(adminSavedResourceService.getSavedResourceSummaries());
     }
 
     @GetMapping("/pending-resources")

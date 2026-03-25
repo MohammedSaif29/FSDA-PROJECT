@@ -8,5 +8,8 @@ import java.util.List;
 
 public interface DownloadRepository extends JpaRepository<Download, Long> {
     List<Download> findByUser(User user);
-    boolean existsByUserAndResource(User user, Resource resource);
+    List<Download> findByUserOrderByDownloadedAtDesc(User user);
+    List<Download> findTop8ByOrderByDownloadedAtDesc();
+    List<Download> findTop10ByOrderByDownloadedAtDesc();
+    long countByUser(User user);
 }

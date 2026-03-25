@@ -29,11 +29,16 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
+            User.Role role = request.getRole() != null ? User.Role.valueOf(request.getRole().toUpperCase())
+                    : User.Role.STUDENT;
             User user = userService.registerUser(request.getUsername(), request.getEmail(),
-                    request.getPassword(), User.Role.USER);
+                    request.getPassword(), role);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User registered successfully");
             response.put("userId", user.getId());
@@ -45,19 +50,39 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtUtil.generateToken(userDetails);
-            User user = userService.findByUsername(request.getUsername()).orElseThrow();
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("username", user.getUsername());
-            response.put("role", user.getRole().name());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
-        }
+        System.out.println("========== LOGIN DEBUG ==========");
+        System.out.println("Attempting login with identification: " + request.getUsername());
+
+        String loginId = request.getUsername().trim();
+        return userService.findByUsername(loginId)
+                .or(() -> userService.findByEmail(loginId))
+                .map(user -> {
+                    System.out.println("Stored hashed password: " + user.getPassword());
+                    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                        System.out.println("Password mismatch for user: " + user.getUsername());
+                        return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                                .body(Map.of("error", "Invalid username/email or password"));
+                    }
+
+                    org.springframework.security.core.userdetails.UserDetails userDetails =
+                            org.springframework.security.core.userdetails.User.builder()
+                                    .username(user.getUsername())
+                                    .password(user.getPassword())
+                                    .roles(user.getRole().name())
+                                    .build();
+
+                    String token = jwtUtil.generateToken(userDetails);
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("token", token);
+                    response.put("userId", user.getId());
+                    response.put("username", user.getUsername());
+                    response.put("role", user.getRole().name());
+
+                    return ResponseEntity.ok(response);
+                }).orElseGet(() -> {
+                    System.out.println("User not found for identifier: " + loginId);
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("error", "Invalid username/email or password"));
+                });
     }
 }

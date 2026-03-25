@@ -33,7 +33,7 @@ const Register = () => {
 
     setLoading(true);
     try {
-      await register({ username: form.username, email: form.email, password: form.password });
+      await register({ username: form.username, email: form.email, password: form.password, role: 'STUDENT' });
       toast.success('Account created; please sign in');
       navigate('/login');
     } catch (err) {
