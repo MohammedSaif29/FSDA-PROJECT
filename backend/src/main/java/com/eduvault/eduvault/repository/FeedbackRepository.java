@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<Feedback> findByResource(Resource resource);
     Optional<Feedback> findByUserAndResource(User user, Resource resource);
+    void deleteByUser(User user);
+    void deleteByResourceId(Long resourceId);
 }

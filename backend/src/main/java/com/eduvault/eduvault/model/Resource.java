@@ -38,6 +38,13 @@ public class Resource {
 
     private String imageUrl;
 
+    // File metadata
+    private Long fileSize;
+    private String fileMime;
+
+    private Long imageSize;
+    private String imageMime;
+
     @ManyToOne
     @JoinColumn(name = "uploaded_by", nullable = false)
     private User uploadedBy;

@@ -4,23 +4,30 @@ import com.eduvault.eduvault.dto.FeedbackRequest;
 import com.eduvault.eduvault.model.Resource;
 import com.eduvault.eduvault.model.User;
 import com.eduvault.eduvault.service.DownloadService;
+import com.eduvault.eduvault.service.FileStorageService;
 import com.eduvault.eduvault.service.FeedbackService;
 import com.eduvault.eduvault.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
+import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/resources")
 @CrossOrigin(origins = "*")
 public class ResourceController {
+    private static final Pattern NON_FILENAME_CHARS = Pattern.compile("[^a-zA-Z0-9._-]+");
 
     @Autowired
     private ResourceService resourceService;
@@ -31,7 +38,8 @@ public class ResourceController {
     @Autowired
     private FeedbackService feedbackService;
 
-    private final String uploadDir = "uploads/";
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @GetMapping
     public ResponseEntity<List<Resource>> getResources() {
@@ -57,47 +65,108 @@ public class ResourceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> getResource(@PathVariable Long id) {
-        return ResponseEntity.ok(resourceService.getResourceById(id));
+    public ResponseEntity<Resource> getResource(@PathVariable Long id, Authentication authentication) {
+        User user = authentication != null ? getUserFromAuthentication(authentication) : null;
+        return ResponseEntity.ok(resourceService.getAccessibleResourceById(id, user));
     }
 
-    @PostMapping
+    @PostMapping("/upload")
     public ResponseEntity<?> uploadResource(
             @RequestParam("title") String title,
             @RequestParam("description") String description,
-            @RequestParam("type") String type,
             @RequestParam("category") String category,
-            @RequestParam("author") String author,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "author", required = false) String author,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
             Authentication authentication) {
-
         try {
+            // Server-side validations
+            final long MAX_RESOURCE_BYTES = 50L * 1024L * 1024L; // 50MB
+            final long MAX_THUMBNAIL_BYTES = 5L * 1024L * 1024L; // 5MB
+            final String resourceContentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase();
+            if (!(resourceContentType.contains("pdf") || (file.getOriginalFilename() != null && file.getOriginalFilename().toLowerCase().endsWith(".pdf")))) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Resource file must be a PDF"));
+            }
+            if (file.getSize() > MAX_RESOURCE_BYTES) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Resource file is too large (max 50MB)"));
+            }
+
+            if (thumbnail != null && !thumbnail.isEmpty()) {
+                String thumbType = thumbnail.getContentType() == null ? "" : thumbnail.getContentType().toLowerCase();
+                if (!thumbType.startsWith("image/") && !(thumbnail.getOriginalFilename() != null && thumbnail.getOriginalFilename().toLowerCase().matches(".*\\.(jpe?g|png|webp)$"))) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Thumbnail must be an image (jpg, png, webp)"));
+                }
+                if (thumbnail.getSize() > MAX_THUMBNAIL_BYTES) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Thumbnail is too large (max 5MB)"));
+                }
+            }
             String username = authentication.getName();
             User uploadedBy = resourceService.getUserFromUsername(username);
 
-            String fileUrl = saveFile(file, "files");
-            String imageUrl = image != null ? saveFile(image, "images") : null;
+            String fileUrl = fileStorageService.store(file, "resources");
+            String imageUrl = thumbnail != null && !thumbnail.isEmpty()
+                    ? fileStorageService.store(thumbnail, "thumbnails")
+                    : (fileStorageService.isImage(file) ? fileUrl : null);
 
-            Resource resource = resourceService.createResource(title, description,
-                    Resource.ResourceType.valueOf(type.toUpperCase()), category, author,
-                    fileUrl, imageUrl, uploadedBy);
+            Resource.ResourceType resourceType = resolveResourceType(type, file);
 
-            return ResponseEntity.ok(resource);
+                // detect content types and sizes
+                Long fileSize = file.getSize();
+                String fileMime = fileStorageService.detectContentType(fileUrl);
+                Long imageSize = null;
+                String imageMime = null;
+                if (imageUrl != null) {
+                // only detect if thumbnail was stored separately
+                imageSize = (thumbnail != null && !thumbnail.isEmpty()) ? thumbnail.getSize() : null;
+                imageMime = (imageUrl != null) ? fileStorageService.detectContentType(imageUrl) : null;
+                }
+
+                Resource resource = resourceService.createResource(title, description,
+                    resourceType,
+                    category,
+                    (author == null || author.isBlank()) ? uploadedBy.getUsername() : author,
+                    fileUrl,
+                    imageUrl,
+                    uploadedBy,
+                    true,
+                    0.0,
+                    0,
+                    java.time.LocalDateTime.now(),
+                    fileSize,
+                    fileMime,
+                    imageSize,
+                    imageMime);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(resource);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PostMapping("/{id}/download")
+    @GetMapping("/download/{id}")
     public ResponseEntity<?> downloadResource(@PathVariable Long id, Authentication authentication) {
         try {
-            Resource resource = resourceService.getResourceById(id);
             User user = getUserFromAuthentication(authentication);
+            Resource resource = resourceService.getAccessibleResourceById(id, user);
             downloadService.recordDownload(user, resource);
-            return ResponseEntity.ok(Map.of("fileUrl", resource.getFileUrl()));
+
+            if (resource.getFileUrl() != null && resource.getFileUrl().matches("^https?://.*")) {
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .location(URI.create(resource.getFileUrl()))
+                        .build();
+            }
+
+            org.springframework.core.io.Resource fileResource = fileStorageService.loadAsResource(resource.getFileUrl());
+            String contentType = fileStorageService.detectContentType(resource.getFileUrl());
+            String fileName = buildDownloadFileName(resource);
+
+            return ResponseEntity.ok()
+                    .contentType(contentType == null ? MediaType.APPLICATION_OCTET_STREAM : MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
+                    .body(fileResource);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -120,19 +189,46 @@ public class ResourceController {
         return ResponseEntity.ok(feedbackService.getResourceFeedback(resource));
     }
 
-    private String saveFile(MultipartFile file, String subDir) throws Exception {
-        Path uploadPath = Paths.get(uploadDir + subDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
-        return "/uploads/" + subDir + "/" + fileName;
-    }
-
     private User getUserFromAuthentication(Authentication authentication) {
         String username = authentication.getName();
         return resourceService.getUserFromUsername(username);
+    }
+
+    private Resource.ResourceType resolveResourceType(String type, MultipartFile file) {
+        if (type != null && !type.isBlank()) {
+            return Resource.ResourceType.valueOf(type.toUpperCase(Locale.ENGLISH));
+        }
+
+        String originalName = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ENGLISH);
+        String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ENGLISH);
+
+        if (contentType.contains("pdf") || originalName.endsWith(".pdf")) {
+            return Resource.ResourceType.PAPER;
+        }
+        if (contentType.startsWith("image/")) {
+            return Resource.ResourceType.GUIDE;
+        }
+        return Resource.ResourceType.TEXTBOOK;
+    }
+
+    private String buildDownloadFileName(Resource resource) {
+        String extension = ".pdf";
+        String fileUrl = resource.getFileUrl();
+
+        if (fileUrl != null) {
+            int extensionIndex = fileUrl.lastIndexOf('.');
+            if (extensionIndex >= 0) {
+                extension = fileUrl.substring(extensionIndex);
+            }
+        }
+
+        String baseName = resource.getTitle() == null ? "resource" : resource.getTitle().trim().toLowerCase(Locale.ENGLISH);
+        baseName = NON_FILENAME_CHARS.matcher(baseName).replaceAll("-").replaceAll("-{2,}", "-").replaceAll("(^-|-$)", "");
+
+        if (baseName.isBlank()) {
+            baseName = "resource";
+        }
+
+        return baseName + extension;
     }
 }

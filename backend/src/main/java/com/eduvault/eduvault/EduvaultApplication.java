@@ -35,12 +35,12 @@ public class EduvaultApplication {
                                              ResourceViewRepository resourceViewRepository,
                                              SavedResourceRepository savedResourceRepository) {
         return args -> {
-            User admin = ensureUser(userService, "admin", "admin@gmail.com", "admin123", User.Role.ADMIN);
-            User user = ensureUser(userService, "user1", "user1@gmail.com", "user123", User.Role.STUDENT);
-            User learnerOne = ensureUser(userService, "user2", "user2@gmail.com", "user123", User.Role.STUDENT);
-            User learnerTwo = ensureUser(userService, "alice", "alice@eduvault.com", "alice123", User.Role.STUDENT);
-            User learnerThree = ensureUser(userService, "nina", "nina@eduvault.com", "nina123", User.Role.STUDENT);
-            User learnerFour = ensureUser(userService, "rahul", "rahul@eduvault.com", "rahul123", User.Role.STUDENT);
+            User admin = ensureUser(userService, "admin", "admin@eduvault.com", "admin123", User.Role.ADMIN);
+            User user = ensureUser(userService, "user1", "user1@gmail.com", "user123", User.Role.USER);
+            User learnerOne = ensureUser(userService, "user2", "user2@gmail.com", "user123", User.Role.USER);
+            User learnerTwo = ensureUser(userService, "alice", "alice@eduvault.com", "alice123", User.Role.USER);
+            User learnerThree = ensureUser(userService, "nina", "nina@eduvault.com", "nina123", User.Role.USER);
+            User learnerFour = ensureUser(userService, "rahul", "rahul@eduvault.com", "rahul123", User.Role.USER);
 
             if (resourceRepository.count() == 0) {
                 List<Resource> seededResources = new ArrayList<>();

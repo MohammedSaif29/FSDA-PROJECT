@@ -11,11 +11,15 @@ node_modules
 dist
 dist-ssr
 *.local
+backend-local.properties
+backend/backend-local.properties
 backend/target/
 frontend-restart.log
 backend/backend-restart.log
 lint-output.txt
 lint-results.json
+.vite/
+backend/uploads/
 
 # Editor directories and files
 .vscode/*

@@ -27,9 +27,9 @@ public class DownloadController {
     public ResponseEntity<?> download(@PathVariable Long resourceId, Authentication authentication) {
         try {
             User user = resourceService.getUserFromUsername(authentication.getName());
-            Resource resource = resourceService.getResourceById(resourceId);
+            Resource resource = resourceService.getAccessibleResourceById(resourceId, user);
             downloadService.recordDownload(user, resource);
-            return ResponseEntity.ok(Map.of("fileUrl", resource.getFileUrl()));
+            return ResponseEntity.ok(Map.of("downloadUrl", "/api/resources/download/" + resource.getId()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

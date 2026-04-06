@@ -13,4 +13,6 @@ public interface SavedResourceRepository extends JpaRepository<SavedResource, Lo
     long countByUser(User user);
     boolean existsByUserAndResourceId(User user, Long resourceId);
     Optional<SavedResource> findByUserAndResourceId(User user, Long resourceId);
+    void deleteByUser(User user);
+    void deleteByResourceId(Long resourceId);
 }

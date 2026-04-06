@@ -1,147 +1,134 @@
 # EduVault - Educational Resource Library
 
-A full-stack web application for students and educators to access textbooks, research papers, and study guides.
+EduVault is a full-stack educational resource platform for browsing, uploading, reviewing, and managing books, papers, and other academic materials.
 
-## Features
+## Repository Layout
 
-- **Authentication**: JWT-based login system with roles (Admin/User)
-- **Resource Management**: Upload, browse, search, and download educational resources
-- **Admin Dashboard**: Analytics, user management, resource approval
-- **Modern UI**: Dark theme with Tailwind CSS
-- **File Upload**: Support for PDF files and images
+This repository is organized so the two main parts of the system are easy to review:
+
+- `frontend/`: React + Vite user interface
+- `backend/`: Spring Boot API, authentication, business logic, and database integration
+- `server/`: supporting Node auth helper used in local development
+- `docs/`: production frontend build output
+- `scripts/`: local development helper scripts
 
 ## Tech Stack
 
-- **Frontend**: React.js + Tailwind CSS
-- **Backend**: Spring Boot (Java)
-- **Database**: MySQL
-- **Authentication**: JWT
+- Frontend: React, Vite, Tailwind CSS
+- Backend: Spring Boot, Java, Maven
+- Database: MySQL
+- Authentication: JWT and Google OAuth
 
 ## Prerequisites
 
 - Java 17+
-- Node.js 16+
-- MySQL 8.0+
+- Node.js 18+
+- MySQL 8+
 - Maven 3.6+
 
-## Setup Instructions
+## Quick Start
 
-### 1. Database Setup
+### 1. Database
 
-1. Install MySQL and create a database:
+Create the database:
+
 ```sql
 CREATE DATABASE eduvault;
 ```
 
-2. Update database credentials in `backend/src/main/resources/application.properties`:
-```properties
-spring.datasource.username=root
-spring.datasource.password=0203
-```
+Load the schema:
 
-3. Run the schema:
 ```bash
 mysql -u root -p eduvault < schema.sql
 ```
 
-### 2. Backend Setup
+Then update the database credentials in `backend/src/main/resources/application.properties`.
 
-1. Navigate to backend directory:
+### 2. Backend
+
 ```bash
 cd backend
-```
-
-2. Install dependencies and run:
-```bash
 mvn clean install
 mvn spring-boot:run
 ```
 
-The backend will start on `http://localhost:8080`
+Backend runs on `http://localhost:8081`.
 
-### 3. Frontend Setup
+### 3. Frontend
 
-1. Install dependencies:
 ```bash
+cd frontend
 npm install
+npm run dev:frontend
 ```
 
-2. Start development server:
+Frontend runs on `http://localhost:5173/FSDA-PROJECT/`.
+
+### 4. Start Everything From Root
+
 ```bash
 npm run dev
 ```
 
-The frontend will start on `http://localhost:5173`
+This starts:
 
-## API Endpoints
+- backend
+- auth helper
+- frontend
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
+## Faculty-Friendly Structure
 
-### Resources
-- `GET /api/resources` - Get approved resources
-- `GET /api/resources/search?query=` - Search resources
-- `GET /api/resources/filter?type=&category=` - Filter resources
-- `POST /api/resources` - Upload resource (authenticated)
-- `POST /api/resources/{id}/download` - Download resource
-- `POST /api/resources/{id}/feedback` - Add feedback
+### Frontend
 
-### Admin
-- `GET /api/admin/dashboard` - Dashboard stats
-- `GET /api/admin/pending-resources` - Pending approvals
-- `POST /api/admin/resources/{id}/approve` - Approve resource
-- `DELETE /api/admin/resources/{id}` - Delete resource
+- `frontend/src/`
+- `frontend/public/`
+- `frontend/package.json`
+- `frontend/vite.config.js`
 
-## Default Admin Account
+### Backend
 
-- Username: `admin`
-- Password: `password`
+- `backend/src/main/java/`
+- `backend/src/main/resources/`
+- `backend/pom.xml`
 
-## Project Structure
+## Key Features
 
-```
-├── backend/
-│   ├── src/main/java/com/eduvault/eduvault/
-│   │   ├── controller/     # REST controllers
-│   │   ├── model/         # JPA entities
-│   │   ├── repository/    # Data repositories
-│   │   ├── service/       # Business logic
-│   │   ├── config/        # Security & configuration
-│   │   └── dto/           # Data transfer objects
-│   └── src/main/resources/
-│       └── application.properties
-├── src/                   # React frontend
-│   ├── components/
-│   ├── pages/
-│   └── layouts/
-└── schema.sql            # Database schema
+- Role-based authentication for admin and user accounts
+- Google sign-in with admin separation rules
+- Admin workspace for users, resources, uploads, and analytics
+- Downloadable educational resources with thumbnails and metadata
+- Responsive frontend for laptop and mobile layouts
+- Secure backend endpoints for uploads, downloads, and moderation
+
+## Common Commands
+
+From the repository root:
+
+```bash
+npm run dev
+npm run dev:frontend
+npm run dev:backend
+npm run build
 ```
 
-## Features Overview
+From the frontend folder:
 
-### User Features
-- Browse and search resources
-- Filter by type and category
-- Download resources
-- Leave reviews and ratings
-- Bookmark resources
+```bash
+cd frontend
+npm run dev:frontend
+npm run build
+npm run lint
+```
 
-### Admin Features
-- Dashboard with analytics
-- Approve/reject resource uploads
-- Manage users
-- View download statistics
-- Upload resources directly
+From the backend folder:
 
-## Contributing
+```bash
+cd backend
+mvn spring-boot:run
+mvn -DskipTests compile
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+## Default Admin Login
 
-## License
-
-This project is licensed under the MIT License.
+- Email: `admin@eduvault.com`
+- Password: `admin123`

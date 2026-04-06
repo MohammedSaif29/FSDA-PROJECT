@@ -9,7 +9,11 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('ADMIN', 'USER') NOT NULL,
+    role ENUM('ADMIN', 'USER', 'STUDENT') NOT NULL,
+    auth_provider ENUM('LOCAL', 'GOOGLE') NOT NULL DEFAULT 'LOCAL',
+    google_id VARCHAR(255) UNIQUE,
+    full_name VARCHAR(255),
+    avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

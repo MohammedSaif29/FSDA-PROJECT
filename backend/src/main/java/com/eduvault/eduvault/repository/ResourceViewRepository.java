@@ -9,4 +9,6 @@ import java.util.List;
 public interface ResourceViewRepository extends JpaRepository<ResourceView, Long> {
     List<ResourceView> findByUserOrderByViewedAtDesc(User user);
     long countByUser(User user);
+    void deleteByUser(User user);
+    void deleteByResourceId(Long resourceId);
 }

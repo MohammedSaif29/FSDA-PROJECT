@@ -25,10 +25,29 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(unique = true)
+    private String googleId;
+
+    private String fullName;
+
+    private String avatarUrl;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     public enum Role {
-        ADMIN, STUDENT
+        ADMIN, USER, STUDENT;
+
+        public String toSecurityRole() {
+            return this == STUDENT ? USER.name() : name();
+        }
+    }
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
     }
 }

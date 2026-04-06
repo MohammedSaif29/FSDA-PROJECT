@@ -92,9 +92,12 @@ public class RecommendationService {
         return new RecommendationResponse(
                 resource.getId(),
                 resource.getTitle(),
+                resource.getDescription(),
                 resource.getCategory(),
                 resource.getImageUrl(),
                 resource.getAuthor(),
+                resource.getType().name(),
+                resource.getRating(),
                 resource.getDownloadsCount(),
                 reason
         );

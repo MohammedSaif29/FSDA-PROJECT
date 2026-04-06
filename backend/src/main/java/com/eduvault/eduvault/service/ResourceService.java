@@ -6,6 +6,7 @@ import com.eduvault.eduvault.repository.ResourceRepository;
 import com.eduvault.eduvault.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +36,13 @@ public class ResourceService {
     public Resource createResource(String title, String description, Resource.ResourceType type,
                                    String category, String author, String fileUrl, String imageUrl, User uploadedBy,
                                    boolean approved, Double rating, Integer downloadsCount, LocalDateTime createdAt) {
+        return createResource(title, description, type, category, author, fileUrl, imageUrl, uploadedBy, approved, rating, downloadsCount, createdAt, null, null, null, null);
+    }
+
+    public Resource createResource(String title, String description, Resource.ResourceType type,
+                                   String category, String author, String fileUrl, String imageUrl, User uploadedBy,
+                                   boolean approved, Double rating, Integer downloadsCount, LocalDateTime createdAt,
+                                   Long fileSize, String fileMime, Long imageSize, String imageMime) {
         Resource resource = new Resource();
         resource.setTitle(title);
         resource.setDescription(description);
@@ -42,7 +50,12 @@ public class ResourceService {
         resource.setCategory(category);
         resource.setAuthor(author);
         resource.setFileUrl(fileUrl);
-        resource.setImageUrl((imageUrl == null || imageUrl.isBlank()) ? buildImageUrl(type, category) : imageUrl);
+        resource.setImageUrl((imageUrl == null || imageUrl.isBlank()) ? null : imageUrl);
+        resource.setFileSize(fileSize);
+        resource.setFileMime(fileMime);
+        resource.setImageSize(imageSize);
+        resource.setImageMime(imageMime);
+        // note: file/image metadata may be set by caller via setters if available
         resource.setUploadedBy(uploadedBy);
         resource.setCreatedAt(createdAt);
         resource.setApproved(approved);
@@ -52,11 +65,15 @@ public class ResourceService {
     }
 
     public List<Resource> getApprovedResources() {
-        return resourceRepository.findByApprovedTrue();
+        return resourceRepository.findByApprovedTrueOrderByCreatedAtDesc();
     }
 
     public List<Resource> getAllApprovedResources() {
         return resourceRepository.findByApprovedTrueOrderByCreatedAtDesc();
+    }
+
+    public List<Resource> getAllResources() {
+        return resourceRepository.findAllByOrderByCreatedAtDesc();
     }
 
     public List<Resource> getPendingResources() {
@@ -83,6 +100,16 @@ public class ResourceService {
         return resourceRepository.findById(id).orElseThrow(() -> new RuntimeException("Resource not found"));
     }
 
+    public Resource getAccessibleResourceById(Long id, User user) {
+        Resource resource = getResourceById(id);
+
+        if (resource.getApproved() || (user != null && user.getRole() == User.Role.ADMIN)) {
+            return resource;
+        }
+
+        throw new RuntimeException("Resource is not available");
+    }
+
     public List<Resource> getLatestResearchPapers(int limit) {
         return resourceRepository.findByApprovedTrueOrderByCreatedAtDesc().stream()
                 .filter(resource -> resource.getType() == Resource.ResourceType.PAPER)
@@ -100,6 +127,47 @@ public class ResourceService {
         resourceRepository.deleteById(id);
     }
 
+    public Resource updateResourceMetadata(Long id, String title, String description, String category, String author, Resource.ResourceType type) {
+        return updateResource(id, title, description, category, author, type, null, null, null, null, null, null, false);
+    }
+
+    public Resource updateResource(Long id,
+                                   String title,
+                                   String description,
+                                   String category,
+                                   String author,
+                                   Resource.ResourceType type,
+                                   String fileUrl,
+                                   String imageUrl,
+                                   Long fileSize,
+                                   String fileMime,
+                                   Long imageSize,
+                                   String imageMime,
+                                   boolean removeThumbnail) {
+        Resource resource = getResourceById(id);
+        resource.setTitle(title);
+        resource.setDescription(description);
+        resource.setCategory(category);
+        resource.setAuthor(author);
+        resource.setType(type);
+        if (fileUrl != null) {
+            resource.setFileUrl(fileUrl);
+            resource.setFileSize(fileSize);
+            resource.setFileMime(fileMime);
+        }
+        if (imageUrl != null) {
+            resource.setImageUrl(imageUrl);
+            resource.setImageSize(imageSize);
+            resource.setImageMime(imageMime);
+        }
+        if (removeThumbnail) {
+            resource.setImageUrl(null);
+            resource.setImageSize(null);
+            resource.setImageMime(null);
+        }
+        return resourceRepository.save(resource);
+    }
+
     public void incrementDownloadCount(Resource resource) {
         resource.setDownloadsCount(resource.getDownloadsCount() + 1);
         resourceRepository.save(resource);
@@ -108,18 +176,5 @@ public class ResourceService {
     public void updateRating(Resource resource) {
         // This will be called after saving feedback
         // Rating is updated in FeedbackService
-    }
-
-    public String buildImageUrl(Resource.ResourceType type, String category) {
-        if (category != null && !category.isBlank()) {
-            return "https://source.unsplash.com/400x300/?" + category.trim().toLowerCase().replace(" ", "-");
-        }
-        if (type == Resource.ResourceType.TEXTBOOK) {
-            return "https://source.unsplash.com/400x300/?book";
-        }
-        if (type == Resource.ResourceType.PAPER) {
-            return "https://source.unsplash.com/400x300/?research";
-        }
-        return "https://source.unsplash.com/400x300/?education";
     }
 }

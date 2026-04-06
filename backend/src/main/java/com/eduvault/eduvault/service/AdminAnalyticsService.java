@@ -38,7 +38,9 @@ public class AdminAnalyticsService {
     public AdminStatsResponse getStats() {
         long totalUsers = userRepository.count();
         long totalResources = resourceRepository.count();
-        long totalDownloads = downloadRepository.count();
+        long totalDownloads = resourceRepository.findAll().stream()
+                .mapToLong(resource -> resource.getDownloadsCount() == null ? 0 : resource.getDownloadsCount())
+                .sum();
         LocalDate activeCutoff = LocalDate.now().minusDays(30);
 
         long activeUsers = downloadRepository.findAll().stream()

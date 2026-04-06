@@ -6,6 +6,7 @@ import com.eduvault.eduvault.model.User;
 import com.eduvault.eduvault.repository.DownloadRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,7 +20,8 @@ public class DownloadService {
     private ResourceService resourceService;
 
     public Download recordDownload(User user, Resource resource) {
-        Download download = new Download();
+        Download download = downloadRepository.findTopByUserAndResourceOrderByDownloadedAtDesc(user, resource)
+                .orElseGet(Download::new);
         download.setUser(user);
         download.setResource(resource);
         download.setDownloadedAt(LocalDateTime.now());
