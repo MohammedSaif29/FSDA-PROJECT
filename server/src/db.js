@@ -12,19 +12,48 @@ export const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-export async function initializeDatabase() {
-  console.log('[auth] Ensuring users table exists in MySQL...');
+const schemaUpdates = [
+  ['is_email_verified', "ALTER TABLE users ADD COLUMN is_email_verified BOOLEAN NOT NULL DEFAULT FALSE"],
+  ['email_verification_token', "ALTER TABLE users ADD COLUMN email_verification_token VARCHAR(255) NULL"],
+  ['email_verification_expires_at', "ALTER TABLE users ADD COLUMN email_verification_expires_at DATETIME NULL"],
+  ['password_reset_token', "ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255) NULL"],
+  ['password_reset_expires_at', "ALTER TABLE users ADD COLUMN password_reset_expires_at DATETIME NULL"],
+  ['refresh_token_hash', "ALTER TABLE users ADD COLUMN refresh_token_hash VARCHAR(255) NULL"],
+  ['last_login_at', "ALTER TABLE users ADD COLUMN last_login_at DATETIME NULL"],
+  ['avatar_url', "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500) NULL"],
+  ['full_name', "ALTER TABLE users ADD COLUMN full_name VARCHAR(255) NULL"],
+  ['auth_provider', "ALTER TABLE users ADD COLUMN auth_provider VARCHAR(50) NOT NULL DEFAULT 'LOCAL'"],
+  ['google_id', "ALTER TABLE users ADD COLUMN google_id VARCHAR(255) NULL"],
+];
+
+async function ensureColumn(columnName, alterStatement) {
+  const [rows] = await pool.query(
+    `SELECT 1
+     FROM information_schema.columns
+     WHERE table_schema = ?
+       AND table_name = 'users'
+       AND column_name = ?
+     LIMIT 1`,
+    [config.mysql.database, columnName]
+  );
+
+  if (rows.length === 0) {
+    await pool.query(alterStatement);
+  }
+}
+
+export async function connectDatabase() {
+  await pool.query('SELECT 1');
+
+  for (const [columnName, statement] of schemaUpdates) {
+    await ensureColumn(columnName, statement);
+  }
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
-      role VARCHAR(20) NOT NULL DEFAULT 'STUDENT',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+    UPDATE users
+    SET is_email_verified = TRUE
+    WHERE auth_provider = 'GOOGLE' OR role = 'ADMIN'
   `);
 
-  console.log('[auth] Users table is ready.');
+  console.log('[auth] Connected to MySQL and ensured auth columns are available');
 }

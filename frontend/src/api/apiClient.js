@@ -1,213 +1,181 @@
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
-import { clearAuth, getHashRouteUrl, getToken } from '../hooks/useAuth';
+import {
+  clearAuth,
+  getToken,
+  isAuthenticated,
+} from '../hooks/useAuth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || '/api/auth';
-export const BACKEND_ORIGIN = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8081').replace(/\/$/, '');
-const authApi = axios.create({
-  baseURL: AUTH_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 15000,
-});
-
-const TOAST_DEDUP_WINDOW_MS = 1500;
-
-let lastToastMessage = '';
-let lastToastAt = 0;
-
-const normalizeApiPath = (path = '') => {
-  if (!path) return '/';
-
-  if (/^https?:\/\//i.test(path)) {
-    return path;
-  }
-
-  const trimmedPath = path.startsWith('/') ? path : `/${path}`;
-  return trimmedPath.startsWith('/api/') ? trimmedPath.slice(4) : trimmedPath;
-};
-
-export const resolveBackendUrl = (path = '') => {
-  if (!path) return BACKEND_ORIGIN;
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${BACKEND_ORIGIN}${path.startsWith('/') ? path : `/${path}`}`;
-};
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 15000,
+  baseURL: '/api',
 });
 
-const getApiErrorMessage = (error) => {
-  const status = error.response?.status;
-  const data = error.response?.data;
-  const contentType = error.response?.headers?.['content-type'] || '';
-  const rawMessage = data?.message || data?.error || error.message;
+const authApi = axios.create({
+  baseURL: AUTH_API_BASE_URL,
+});
 
-  if (!error.response) {
-    return 'Backend server is not reachable. Start the Spring Boot app on http://localhost:8081 and try again.';
-  }
-
-  if (
-    status === 500 &&
-    typeof rawMessage === 'string' &&
-    /proxy error|socket hang up|econnrefused|unable to connect/i.test(rawMessage)
-  ) {
-    return 'Frontend is running, but the backend server is unavailable. Start the Spring Boot app on port 8081.';
-  }
-
-  if (
-    status === 500 &&
-    (contentType.includes('text/html') ||
-      (typeof data === 'string' && /<!doctype html>|<html/i.test(data)) ||
-      rawMessage === 'Request failed with status code 500')
-  ) {
-    return 'Frontend is running, but the backend API is unavailable or failed to start. Make sure Spring Boot is running on http://localhost:8081 and MySQL is up.';
-  }
-
-  return rawMessage || 'Unexpected error';
+const ensureAbsoluteUrl = (value) => {
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) return value;
+  return `/${value}`;
 };
 
-const showErrorToast = (message) => {
-  const now = Date.now();
-  if (message === lastToastMessage && now - lastToastAt < TOAST_DEDUP_WINDOW_MS) {
-    return;
-  }
+const BACKEND_ORIGIN =
+  import.meta.env.VITE_API_BASE_URL && /^https?:\/\//i.test(import.meta.env.VITE_API_BASE_URL)
+    ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')
+    : window.location.origin;
 
-  lastToastMessage = message;
-  lastToastAt = now;
-  toast.error(message, { duration: 4000 });
+export const resolveBackendUrl = (path) => {
+  const normalizedPath = ensureAbsoluteUrl(path) || '/';
+  if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) {
+    return normalizedPath;
+  }
+  return `${BACKEND_ORIGIN}${normalizedPath}`;
 };
 
-const applyAuthHeader = (config) => {
-  const token = localStorage.getItem('token');
+const attachAuthHeader = (config) => {
+  const token = getToken();
   if (token) {
-    config.headers = config.headers || {};
+    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 };
 
-authApi.interceptors.request.use(applyAuthHeader);
-api.interceptors.request.use((config) => {
-  return applyAuthHeader(config);
-});
+api.interceptors.request.use(attachAuthHeader);
+authApi.interceptors.request.use(attachAuthHeader);
 
 const handleApiError = (error) => {
   const status = error.response?.status;
-  const message = getApiErrorMessage(error);
-
-  if (status === 401 || status === 403) {
+  if ((status === 401 || status === 403) && isAuthenticated()) {
     clearAuth();
-    window.location.href = getHashRouteUrl('/login');
-    return Promise.reject(error);
+    if (window.location.pathname !== `${import.meta.env.BASE_URL}login`) {
+      window.location.href = `${import.meta.env.BASE_URL}login`;
+    }
   }
-
-  showErrorToast(message);
-
-  return Promise.reject(error);
+  throw error;
 };
 
-authApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.config?.url?.includes('/login') || error.config?.url?.includes('/register')) {
-      return Promise.reject(error);
-    }
-    return handleApiError(error);
-  }
-);
+api.interceptors.response.use((response) => response, handleApiError);
+authApi.interceptors.response.use((response) => response, handleApiError);
 
-api.interceptors.response.use(
-  (response) => response,
-  handleApiError
-);
+export const getApiErrorMessage = (error, fallback = 'Something went wrong') => {
+  return error.response?.data?.message || error.response?.data?.error || fallback;
+};
 
-export const getResources = async (params = {}) => {
-  const response = await api.get(normalizeApiPath('/resources'), { params });
-  return response.data;
+export const getResources = async () => {
+  const res = await api.get('/resources');
+  return Array.isArray(res.data) ? res.data : [];
 };
 
 export const getAllResources = async () => {
-  const response = await api.get(normalizeApiPath('/resources/all'));
-  return response.data;
+  const res = await api.get('/admin/resources');
+  return Array.isArray(res.data) ? res.data : [];
 };
 
 export const getResourceById = async (id) => {
-  const response = await api.get(normalizeApiPath(`/resources/${id}`));
-  return response.data;
+  const res = await api.get(`/resources/${id}`);
+  return res.data;
 };
 
-export const uploadResource = async (payload) => {
-  const response = await api.post(normalizeApiPath('/resources/upload'), payload, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-  return response.data;
+export const uploadResource = async (formData) => {
+  const res = await api.post('/resources/upload', formData);
+  return res.data;
 };
 
-export const login = async (creds) => {
-  const response = await authApi.post('/login', creds);
-  return response.data;
+export const login = async ({ identifier, password }) => {
+  const res = await api.post('/auth/login', { identifier, password });
+  return res.data;
 };
 
 export const getBackendHealth = async () => {
-  const response = await fetch(resolveBackendUrl('/api/health'), {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Backend health check failed with status ${response.status}`);
-  }
-
-  return response.json();
+  const res = await axios.get(resolveBackendUrl('/api/health'));
+  return res.data;
 };
 
-export const register = async (creds) => {
-  const response = await authApi.post('/register', creds);
-  return response.data;
+export const register = async ({ username, email, password }) => {
+  const res = await api.post('/auth/register', { username, email, password });
+  return res.data;
 };
 
-export const getCurrentUser = async () => authApi.get('/me').then((response) => response.data);
+export const getCurrentUser = async () => {
+  const res = await api.get('/auth/me');
+  return res.data;
+};
 
-export const getGoogleAuthStatus = async () => authApi.get('/google/status').then((response) => response.data);
+export const getGoogleAuthStatus = async () => {
+  const res = await api.get('/auth/google/status');
+  return res.data;
+};
 
 export const getGoogleLoginUrl = () => resolveBackendUrl('/oauth2/authorization/google');
 
-export const getResourceDownloadUrl = (id) => {
+export const getResourceDownloadUrl = (resourceId) => resolveBackendUrl(`/api/resources/download/${resourceId}`);
+
+export const saveResourceItem = async (resourceId) => {
+  const res = await api.post(`/save/${resourceId}`);
+  return res.data;
+};
+
+export const recordResourceView = async (resourceId) => {
+  const res = await api.post(`/view/${resourceId}`);
+  return res.data;
+};
+
+export async function apiFetch(input, init = {}) {
+  const url = typeof input === 'string' ? resolveBackendUrl(input) : input;
+  const headers = new Headers(init.headers || {});
   const token = getToken();
-  const downloadPath = normalizeApiPath(`/resources/download/${id}`);
-  const url = new URL(resolveBackendUrl(`/api${downloadPath}`));
-  if (token) {
-    url.searchParams.set('token', token);
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
-  return url.toString();
-};
 
-export const saveResourceItem = async (id) => {
-  const response = await api.post(normalizeApiPath(`/save/${id}`));
-  return response.data;
-};
+  let body = init.body;
+  if (body === undefined && Object.prototype.hasOwnProperty.call(init, 'data')) {
+    if (init.data instanceof FormData) {
+      body = init.data;
+    } else if (init.data !== undefined) {
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+      body = headers.get('Content-Type')?.includes('application/json')
+        ? JSON.stringify(init.data)
+        : init.data;
+    }
+  }
 
-export const recordResourceView = async (id) => {
-  const response = await api.post(normalizeApiPath(`/view/${id}`));
-  return response.data;
-};
+  const response = await fetch(url, { ...init, headers, body });
+  if (response.status === 401 || response.status === 403) {
+    clearAuth();
+  }
 
-export const apiFetch = async (path, options = {}) => {
-  const response = await api({ url: normalizeApiPath(path), ...options });
-  return response.data;
-};
+  const contentType = response.headers.get('content-type') || '';
+  let payload = null;
 
-export { getApiErrorMessage };
+  if (response.status !== 204) {
+    if (contentType.includes('application/json')) {
+      payload = await response.json();
+    } else {
+      const text = await response.text();
+      payload = text || null;
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error(
+      payload?.message || payload?.error || `Request failed with status ${response.status}`
+    );
+    error.status = response.status;
+    error.response = {
+      status: response.status,
+      data: payload,
+    };
+    throw error;
+  }
+
+  return payload;
+}
+
 export default api;
-

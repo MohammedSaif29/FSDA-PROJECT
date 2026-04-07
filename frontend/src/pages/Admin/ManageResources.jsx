@@ -205,7 +205,7 @@ export default function ManageResources() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] text-left">
+          <table className="w-full min-w-[760px] text-left lg:min-w-[920px]">
             <thead>
               <tr className="border-b border-white/10 text-sm uppercase tracking-[0.18em] text-slate-500">
                 <th className="pb-4">Resource</th>
@@ -226,8 +226,8 @@ export default function ManageResources() {
                   ) : (
                     <>
                       <td className="py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+                        <div className="flex items-center gap-3 lg:gap-4">
+                          <div className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 lg:h-16 lg:w-16">
                             {resource.imageUrl ? (
                               <img
                                 src={resolveBackendUrl(resource.imageUrl)}
@@ -244,7 +244,7 @@ export default function ManageResources() {
                             <Link to={`/admin/resources/${resource.id}`} className="font-semibold text-white transition hover:text-indigo-300">
                               {resource.title}
                             </Link>
-                            <p className="mt-1 line-clamp-2 max-w-md text-sm text-slate-400">{resource.description}</p>
+                            <p className="mt-1 line-clamp-2 max-w-xs text-sm text-slate-400 lg:max-w-md">{resource.description}</p>
                           </div>
                         </div>
                       </td>

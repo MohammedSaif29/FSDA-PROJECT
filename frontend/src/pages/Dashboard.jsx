@@ -244,7 +244,7 @@ export default function Dashboard() {
       ) : null}
 
       <section className="space-y-4">
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-300">Recommended for You</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">Curated from your learning patterns</h2>
@@ -254,7 +254,7 @@ export default function Dashboard() {
 
         <div className="flex snap-x gap-5 overflow-x-auto pb-2">
           {(loading ? skeletonCards.slice(0, 6) : dashboardData.recommendations).map((resource, index) => (
-            <div key={loading ? `recommended-skeleton-${index}` : resource.id} className="min-w-[310px] snap-start">
+            <div key={loading ? `recommended-skeleton-${index}` : resource.id} className="w-[85vw] min-w-[260px] max-w-[310px] snap-start sm:w-[310px]">
               {loading ? (
                 <div className="h-[420px] animate-pulse rounded-[28px] border border-white/10 bg-white/[0.04]" />
               ) : (
@@ -350,7 +350,7 @@ export default function Dashboard() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-300">Browse by Categories</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">Start from the subjects you care about most</h2>

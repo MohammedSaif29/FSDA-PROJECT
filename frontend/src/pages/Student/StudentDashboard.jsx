@@ -175,7 +175,7 @@ export default function StudentDashboard() {
             </div>
           ) : (
             recommendations.slice(0, 8).map((resource) => (
-              <div key={resource.id} className="min-w-[310px] max-w-[310px]">
+              <div key={resource.id} className="w-[85vw] min-w-[260px] max-w-[310px] sm:w-[310px]">
                 <ResourceCard resource={resource} />
               </div>
             ))

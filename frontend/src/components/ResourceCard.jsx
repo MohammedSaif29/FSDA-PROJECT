@@ -144,20 +144,20 @@ export default function ResourceCard({ resource, query = '', detailPathBase = '/
           <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Author</p>
         </div>
 
-        <div className="mt-auto flex gap-3">
-          <Button className="flex-1 justify-center rounded-full" onClick={handleDownload}>
-            <Download className="h-4 w-4" />
+        <div className="mt-auto flex flex-col gap-2.5">
+          <Button className="w-full justify-center rounded-xl py-2.5" onClick={handleDownload}>
+            <Download className="mr-2 h-4 w-4" />
             Download
           </Button>
           {allowSave ? (
-            <Button variant="secondary" className="flex-1 justify-center rounded-full" onClick={handleSave}>
-              <Bookmark className="h-4 w-4" />
+            <Button variant="secondary" className="w-full justify-center rounded-xl py-2.5 bg-white/5 hover:bg-white/10" onClick={handleSave}>
+              <Bookmark className="mr-2 h-4 w-4" />
               Save
             </Button>
           ) : (
             <Link
               to={detailPath}
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-center font-semibold text-white transition-all hover:bg-white/10"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-white/20 bg-white/5 py-2.5 text-center font-semibold text-white transition-all hover:bg-white/10"
             >
               View Details
             </Link>

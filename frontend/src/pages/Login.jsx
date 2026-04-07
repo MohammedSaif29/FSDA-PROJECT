@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Mail, Sparkles, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -6,14 +6,17 @@ import { getApiErrorMessage, getGoogleAuthStatus, getGoogleLoginUrl, login } fro
 import { getDemoCredentials, getRedirectPathForRole, isDemoAutoLoginEnabled, normalizeUserRole, setAuth } from '../hooks/useAuth';
 import Button from '../components/ui/Button';
 import InputField from '../components/ui/InputField';
+import Captcha from '../components/ui/Captcha';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ identifier: '', password: '' });
+  const [form, setForm] = useState({ identifier: '', password: '', captcha: '' });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(true);
   const [googleConfigured, setGoogleConfigured] = useState(false);
   const [errors, setErrors] = useState({});
+  const [expectedCaptcha, setExpectedCaptcha] = useState('');
+  const captchaRef = useRef(null);
 
   useEffect(() => {
     const hashQuery = window.location.hash.includes('?')
@@ -51,6 +54,7 @@ const Login = () => {
     const newErrors = {};
     if (!form.identifier.trim()) newErrors.identifier = 'Email or username is required';
     if (!form.password.trim()) newErrors.password = 'Password is required';
+    if (!form.captcha.trim()) newErrors.captcha = 'Verification code is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -58,6 +62,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+    
+    if (form.captcha.toLowerCase() !== expectedCaptcha.toLowerCase()) {
+      toast.error('Invalid verification code. Please try again.');
+      setForm(prev => ({ ...prev, captcha: '' }));
+      if (captchaRef.current) captchaRef.current.refresh();
+      const newErrors = { ...errors, captcha: 'Invalid code' };
+      setErrors(newErrors);
+      return;
+    }
     
     setLoading(true);
     try {
@@ -127,6 +140,29 @@ const Login = () => {
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-white/10 bg-[#12131c] px-4 py-3 text-white placeholder:text-slate-500 transition-all focus:border-indigo-500 focus:bg-[#1a1c29] focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
+
+              <div className="pt-2">
+                <label className="mb-2 block text-sm font-medium text-slate-300">Security Check</label>
+                <div className="grid gap-4 sm:flex sm:items-end">
+                  <div className="mb-1 sm:mb-0">
+                    <Captcha 
+                      ref={captchaRef} 
+                      onTargetCodeChange={(code) => setExpectedCaptcha(code)} 
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <InputField 
+                      type="text" 
+                      name="captcha" 
+                      value={form.captcha} 
+                      onChange={handleChange} 
+                      error={errors.captcha} 
+                      placeholder="Enter verification code"
+                      className="w-full rounded-xl border border-white/10 bg-[#12131c] px-4 py-3 text-white placeholder:text-slate-500 transition-all focus:border-indigo-500 focus:bg-[#1a1c29] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-4 text-sm text-indigo-100">
                 <p className="font-semibold text-white">Demo credentials</p>
@@ -235,4 +271,3 @@ const Login = () => {
 };
 
 export default Login;
-

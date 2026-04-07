@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { register } from '../api/apiClient';
 import Button from '../components/ui/Button';
 import InputField from '../components/ui/InputField';
+import Captcha from '../components/ui/Captcha';
 import { getRedirectPathForRole, setAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', captcha: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [expectedCaptcha, setExpectedCaptcha] = useState('');
+  const captchaRef = useRef(null);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -23,6 +26,7 @@ const Register = () => {
     if (!form.email.trim()) newErrors.email = 'Email is required';
     if (!form.password.trim()) newErrors.password = 'Password is required';
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords must match';
+    if (!form.captcha.trim()) newErrors.captcha = 'Verification code is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -31,6 +35,15 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
+    if (form.captcha.toLowerCase() !== expectedCaptcha.toLowerCase()) {
+      toast.error('Invalid verification code. Please try again.');
+      setForm(prev => ({ ...prev, captcha: '' }));
+      if (captchaRef.current) captchaRef.current.refresh();
+      const newErrors = { ...errors, captcha: 'Invalid code' };
+      setErrors(newErrors);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -74,6 +87,28 @@ const Register = () => {
             <InputField label="Email" type="email" name="email" value={form.email} onChange={handleChange} error={errors.email} icon={BookOpen} />
             <InputField label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={errors.password} icon={BookOpen} />
             <InputField label="Confirm Password" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} error={errors.confirmPassword} icon={BookOpen} />
+
+            <div className="pt-2">
+              <label className="mb-2 block text-sm font-medium text-slate-300">Security Check</label>
+              <div className="grid gap-4 sm:flex sm:items-end">
+                <div className="mb-1 sm:mb-0">
+                  <Captcha 
+                    ref={captchaRef} 
+                    onTargetCodeChange={(code) => setExpectedCaptcha(code)} 
+                  />
+                </div>
+                <div className="flex-1">
+                  <InputField 
+                    type="text" 
+                    name="captcha" 
+                    value={form.captcha} 
+                    onChange={handleChange} 
+                    error={errors.captcha} 
+                    placeholder="Enter verification code"
+                  />
+                </div>
+              </div>
+            </div>
 
             <Button type="submit" loading={loading} className="w-full">Register</Button>
           </form>
