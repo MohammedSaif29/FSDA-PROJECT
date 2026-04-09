@@ -1,0 +1,11 @@
+# Copy this file to `backend/backend-local.properties` or `backend-local.properties`
+# and replace the placeholder values with your real Google OAuth credentials.
+
+
+FRONTEND_URL=http://localhost:5173
+FRONTEND_OAUTH_SUCCESS_URL=http://localhost:5173/#/auth/callback
+APP_UPLOAD_DIR=./uploads
+spring.security.oauth2.client.registration.google.client-id=your-google-client-id.apps.googleusercontent.com
+spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+spring.security.oauth2.client.registration.google.scope=openid,profile,email
+spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
