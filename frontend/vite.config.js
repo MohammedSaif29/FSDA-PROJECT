@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: "/FSDA-PROJECT/",
+  base: "/FSAD_PROJECT_FRONTEND/",
   plugins: [react()],
   server: {
     proxy: {
@@ -13,10 +13,12 @@ export default defineConfig({
       '/oauth2': {
         target: 'http://localhost:8081',
         changeOrigin: true,
+        xfwd: true,
       },
       '/login': {
         target: 'http://localhost:8081',
         changeOrigin: true,
+        xfwd: true,
       },
       '/uploads': {
         target: 'http://localhost:8081',
@@ -25,7 +27,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../docs',
+    outDir: 'dist',
     emptyOutDir: true
   }
 })

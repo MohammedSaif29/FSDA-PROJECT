@@ -65,7 +65,7 @@ const Captcha = forwardRef(({ length = 6, onTargetCodeChange }, ref) => {
 
     for (let i = 0; i < length; i++) {
       const char = newCode.charAt(i);
-      ctx.fillStyle = randomColor(50, 150); // Pink/Dark colors can fall here
+      ctx.fillStyle = randomColor(50, 150); // anyLight or Dark colors can fall here for captcha.
       
       const x = (width / length) * i + 10;
       const y = height / 2;

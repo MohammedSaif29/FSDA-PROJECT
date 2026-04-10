@@ -52,7 +52,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     })
                     .orElseThrow(() -> new IllegalStateException("Failed to map Google user"));
 
-            String redirectUrl = UriComponentsBuilder.fromUriString(frontendSuccessUrl != null ? frontendSuccessUrl : "http://localhost:5173/#/auth/callback")
+            String redirectUrl = UriComponentsBuilder.fromUriString(frontendSuccessUrl != null ? frontendSuccessUrl : "http://localhost:5173/FSDA-PROJECT/auth/callback")
                     .queryParam("token", authResponse.token())
                     .queryParam("userId", authResponse.userId())
                     .queryParam("username", authResponse.username())
@@ -66,7 +66,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             e.printStackTrace();
             String errorMsg = e.getMessage() != null ? e.getMessage() : e.toString();
             String safeMsg = java.net.URLEncoder.encode("Save Error: " + errorMsg, "UTF-8");
-            response.sendRedirect("http://localhost:5173/#/login?oauthError=true&errorMsg=" + safeMsg);
+            response.sendRedirect("http://localhost:5173/FSDA-PROJECT/login?oauthError=true&errorMsg=" + safeMsg);
         }
     }
 

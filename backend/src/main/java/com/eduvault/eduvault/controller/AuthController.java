@@ -40,16 +40,21 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            if (request.getRole() != null && "ADMIN".equalsIgnoreCase(request.getRole())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Admin accounts cannot be created from public registration"));
+            User user;
+            if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
+                user = userService.registerUser(
+                        request.getUsername(),
+                        request.getEmail(),
+                        request.getPassword(),
+                        User.Role.valueOf(request.getRole().toUpperCase().trim())
+                );
+            } else {
+                user = userService.registerUser(
+                        request.getUsername(),
+                        request.getEmail(),
+                        request.getPassword()
+                );
             }
-
-            User user = userService.registerUser(
-                    request.getUsername(),
-                    request.getEmail(),
-                    request.getPassword()
-            );
             return ResponseEntity.status(HttpStatus.CREATED).body(buildAuthResponse(user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

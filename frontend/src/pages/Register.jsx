@@ -10,7 +10,7 @@ import { getRedirectPathForRole, setAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', captcha: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', captcha: '', role: 'USER' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [expectedCaptcha, setExpectedCaptcha] = useState('');
@@ -51,6 +51,7 @@ const Register = () => {
         username: form.username,
         email: form.email,
         password: form.password,
+        role: form.role,
       });
       setAuth(
         { id: response.userId, username: response.username, email: response.email, role: response.role },
@@ -87,6 +88,20 @@ const Register = () => {
             <InputField label="Email" type="email" name="email" value={form.email} onChange={handleChange} error={errors.email} icon={BookOpen} />
             <InputField label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={errors.password} icon={BookOpen} />
             <InputField label="Confirm Password" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} error={errors.confirmPassword} icon={BookOpen} />
+
+            <div className="pt-2">
+              <label className="mb-3 block text-sm font-medium text-slate-300">Account Type</label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-4 transition-all ${form.role === 'USER' ? 'border-indigo-500 bg-indigo-500/10 text-white' : 'border-white/10 bg-slate-900/50 text-slate-400 hover:bg-slate-800'}`}>
+                  <input type="radio" name="role" value="USER" checked={form.role === 'USER'} onChange={handleChange} className="sr-only" />
+                  <span className="font-semibold">Student</span>
+                </label>
+                <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-4 transition-all ${form.role === 'ADMIN' ? 'border-indigo-500 bg-indigo-500/10 text-white' : 'border-white/10 bg-slate-900/50 text-slate-400 hover:bg-slate-800'}`}>
+                  <input type="radio" name="role" value="ADMIN" checked={form.role === 'ADMIN'} onChange={handleChange} className="sr-only" />
+                  <span className="font-semibold">Educator</span>
+                </label>
+              </div>
+            </div>
 
             <div className="pt-2">
               <label className="mb-2 block text-sm font-medium text-slate-300">Security Check</label>

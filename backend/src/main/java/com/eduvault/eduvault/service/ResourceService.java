@@ -4,8 +4,13 @@ import com.eduvault.eduvault.model.Resource;
 import com.eduvault.eduvault.model.User;
 import com.eduvault.eduvault.repository.ResourceRepository;
 import com.eduvault.eduvault.repository.UserRepository;
+import com.eduvault.eduvault.repository.DownloadRepository;
+import com.eduvault.eduvault.repository.FeedbackRepository;
+import com.eduvault.eduvault.repository.ResourceViewRepository;
+import com.eduvault.eduvault.repository.SavedResourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +23,18 @@ public class ResourceService {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private SavedResourceRepository savedResourceRepository;
+
+    @Autowired
+    private DownloadRepository downloadRepository;
+
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
+    @Autowired
+    private ResourceViewRepository resourceViewRepository;
 
     public User getUserFromUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
@@ -123,7 +140,12 @@ public class ResourceService {
         return resourceRepository.save(resource);
     }
 
+    @Transactional
     public void deleteResource(Long id) {
+        savedResourceRepository.deleteByResourceId(id);
+        downloadRepository.deleteByResourceId(id);
+        feedbackRepository.deleteByResourceId(id);
+        resourceViewRepository.deleteByResourceId(id);
         resourceRepository.deleteById(id);
     }
 
@@ -174,7 +196,5 @@ public class ResourceService {
     }
 
     public void updateRating(Resource resource) {
-        // This will be called after saving feedback
-        // Rating is updated in FeedbackService
     }
 }
