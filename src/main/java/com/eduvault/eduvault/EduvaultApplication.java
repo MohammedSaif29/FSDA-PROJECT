@@ -11,6 +11,7 @@ import com.eduvault.eduvault.repository.ResourceViewRepository;
 import com.eduvault.eduvault.repository.SavedResourceRepository;
 import com.eduvault.eduvault.service.ResourceService;
 import com.eduvault.eduvault.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +23,21 @@ import java.util.List;
 
 @SpringBootApplication
 public class EduvaultApplication {
+
+    @Value("${app.seed-demo-data:false}")
+    private boolean seedDemoData;
+
+    @Value("${app.seed-admin-account:false}")
+    private boolean seedAdminAccount;
+
+    @Value("${app.default-admin.username:admin}")
+    private String defaultAdminUsername;
+
+    @Value("${app.default-admin.email:admin@eduvault.com}")
+    private String defaultAdminEmail;
+
+    @Value("${app.default-admin.password:}")
+    private String defaultAdminPassword;
 
     public static void main(String[] args) {
         SpringApplication.run(EduvaultApplication.class, args);
@@ -35,7 +51,19 @@ public class EduvaultApplication {
                                              ResourceViewRepository resourceViewRepository,
                                              SavedResourceRepository savedResourceRepository) {
         return args -> {
-            User admin = ensureUser(userService, "admin", "admin@eduvault.com", "admin123", User.Role.ADMIN);
+            User admin = null;
+            if (seedAdminAccount && !defaultAdminPassword.isBlank()) {
+                admin = ensureUser(userService, defaultAdminUsername, defaultAdminEmail, defaultAdminPassword, User.Role.ADMIN);
+            }
+
+            if (!seedDemoData) {
+                return;
+            }
+
+            if (admin == null) {
+                admin = ensureUser(userService, "admin", "admin@eduvault.com", "admin123", User.Role.ADMIN);
+            }
+
             User user = ensureUser(userService, "user1", "user1@gmail.com", "user123", User.Role.USER);
             User learnerOne = ensureUser(userService, "user2", "user2@gmail.com", "user123", User.Role.USER);
             User learnerTwo = ensureUser(userService, "alice", "alice@eduvault.com", "alice123", User.Role.USER);

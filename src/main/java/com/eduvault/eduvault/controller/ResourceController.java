@@ -1,6 +1,7 @@
 package com.eduvault.eduvault.controller;
 
 import com.eduvault.eduvault.dto.FeedbackRequest;
+import com.eduvault.eduvault.dto.ResourceAvailabilityResponse;
 import com.eduvault.eduvault.model.Resource;
 import com.eduvault.eduvault.model.User;
 import com.eduvault.eduvault.service.DownloadService;
@@ -68,6 +69,21 @@ public class ResourceController {
     public ResponseEntity<Resource> getResource(@PathVariable Long id, Authentication authentication) {
         User user = authentication != null ? getUserFromAuthentication(authentication) : null;
         return ResponseEntity.ok(resourceService.getAccessibleResourceById(id, user));
+    }
+
+    @GetMapping("/{id}/availability")
+    public ResponseEntity<ResourceAvailabilityResponse> getResourceAvailability(@PathVariable Long id, Authentication authentication) {
+        User user = authentication != null ? getUserFromAuthentication(authentication) : null;
+        Resource resource = resourceService.getAccessibleResourceById(id, user);
+
+        boolean downloadAvailable = resource.getFileUrl() != null && (
+                resource.getFileUrl().matches("^https?://.*") || fileStorageService.exists(resource.getFileUrl())
+        );
+        boolean thumbnailAvailable = resource.getImageUrl() != null && (
+                resource.getImageUrl().matches("^https?://.*") || fileStorageService.exists(resource.getImageUrl())
+        );
+
+        return ResponseEntity.ok(new ResourceAvailabilityResponse(downloadAvailable, thumbnailAvailable));
     }
 
     @PostMapping("/upload")
