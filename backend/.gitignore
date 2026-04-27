@@ -1,7 +1,5 @@
 target/
-node_modules/
-uploads/
-*.log
-backend-local.properties
 .env
-.DS_Store
+*.log
+uploads/
+backend-local.properties

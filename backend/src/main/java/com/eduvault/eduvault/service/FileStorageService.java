@@ -86,6 +86,20 @@ public class FileStorageService {
         }
     }
 
+    public boolean exists(String publicPath) {
+        if (publicPath == null || publicPath.isBlank()) {
+            return false;
+        }
+
+        if (!publicPath.startsWith("/uploads/")) {
+            return true;
+        }
+
+        String normalizedPublicPath = publicPath.substring("/uploads/".length());
+        Path file = uploadRoot.resolve(normalizedPublicPath).normalize();
+        return file.startsWith(uploadRoot) && Files.exists(file);
+    }
+
     public boolean isImage(MultipartFile file) {
         return file != null
                 && file.getContentType() != null

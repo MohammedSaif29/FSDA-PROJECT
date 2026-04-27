@@ -1,16 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bookmark, Download, Star } from 'lucide-react';
+import { AlertCircle, Bookmark, Download, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Button from './ui/Button';
-import { getResourceDownloadUrl, resolveBackendUrl, saveResourceItem } from '../api/apiClient';
+import { getResourceAvailability, getResourceDownloadUrl, resolveBackendUrl, saveResourceItem } from '../api/apiClient';
 import { getUser } from '../hooks/useAuth';
-
-const TYPE_IMAGE_FALLBACK = {
-  TEXTBOOK: 'https://source.unsplash.com/400x300/?book',
-  PAPER: 'https://source.unsplash.com/400x300/?research',
-};
+import { getResourceFallbackImage } from '../lib/resourceMedia';
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -50,25 +46,26 @@ export default function ResourceCard({ resource, query = '', detailPathBase = '/
   const allowSave = user?.role !== 'ADMIN';
   const numericRating = Number(resource.rating ?? 0);
   const detailPath = `${detailPathBase}/${resource.id}`;
+  const [imageError, setImageError] = useState(false);
 
   const imageUrl = useMemo(() => {
-    if (resource.imageUrl) {
+    if (resource.imageUrl && !imageError) {
       return resolveBackendUrl(resource.imageUrl);
     }
-
-    if (resource.category) {
-      return `https://source.unsplash.com/400x300/?${encodeURIComponent(resource.category.toLowerCase())}`;
-    }
-
-    return TYPE_IMAGE_FALLBACK[resource.type] || 'https://source.unsplash.com/400x300/?learning';
-  }, [resource.category, resource.imageUrl, resource.type]);
+    return getResourceFallbackImage(resource);
+  }, [imageError, resource]);
 
   const handleDownload = async () => {
     try {
+      const availability = await getResourceAvailability(resource.id);
+      if (!availability.downloadAvailable) {
+        toast.error('This resource file is currently unavailable. Please re-upload it from admin resources.');
+        return;
+      }
       onDownloaded?.(resource);
       window.open(getResourceDownloadUrl(resource.id), '_blank', 'noopener,noreferrer');
     } catch {
-      // shared API layer already handles toast feedback
+      toast.error('Unable to open this resource right now.');
     }
   };
 
@@ -95,6 +92,7 @@ export default function ResourceCard({ resource, query = '', detailPathBase = '/
           <img
             src={imageUrl}
             alt={resource.title}
+            onError={() => setImageError(true)}
             className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
           />
         </Link>
@@ -149,6 +147,12 @@ export default function ResourceCard({ resource, query = '', detailPathBase = '/
             <Download className="mr-2 h-4 w-4" />
             Download
           </Button>
+          {resource.fileUrl?.startsWith('/uploads/') ? (
+            <p className="flex items-center justify-center gap-2 text-xs text-amber-300">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Local upload may need re-upload if the file was removed
+            </p>
+          ) : null}
           {allowSave ? (
             <Button variant="secondary" className="w-full justify-center rounded-xl py-2.5 bg-white/5 hover:bg-white/10" onClick={handleSave}>
               <Bookmark className="mr-2 h-4 w-4" />

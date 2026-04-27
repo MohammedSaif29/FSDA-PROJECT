@@ -241,7 +241,7 @@ export default function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+              className="min-w-0 rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
             >
               <div className="mb-6 flex items-center justify-between gap-3">
                 <div>
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
                   description="When learners start downloading resources, the trend line will appear here automatically."
                 />
               ) : (
-                <div className="h-[320px]">
+                <div className="h-[320px] min-w-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dashboardData.downloadsTrend} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
                       <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" vertical={false} />
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+              className="min-w-0 rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
             >
               <div className="mb-6">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Resources By Category</p>
@@ -299,25 +299,25 @@ export default function AdminDashboard() {
                   description="Publish or approve resources to see category distribution here."
                 />
               ) : (
-                <div className="h-[320px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dashboardData.categoryStats}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={72}
-                        outerRadius={108}
-                        paddingAngle={4}
-                      >
-                        {dashboardData.categoryStats.map((entry, index) => (
-                          <Cell key={`cell-${entry.name}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<PieTooltip />} />
-                      <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ color: '#cbd5e1' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="flex h-[320px] min-w-0 items-center justify-center">
+                  <PieChart width={320} height={320}>
+                    <Pie
+                      data={dashboardData.categoryStats}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="42%"
+                      innerRadius={72}
+                      outerRadius={108}
+                      paddingAngle={4}
+                    >
+                      {dashboardData.categoryStats.map((entry, index) => (
+                        <Cell key={`cell-${entry.name}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PieTooltip />} />
+                    <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ color: '#cbd5e1' }} />
+                  </PieChart>
                 </div>
               )}
             </motion.div>

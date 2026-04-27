@@ -24,8 +24,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +39,12 @@ public class SecurityConfig {
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
+
+    @Value("${app.frontend.login-url}")
+    private String frontendLoginUrl;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id:}")
     private String googleClientId;
@@ -99,6 +107,9 @@ public class SecurityConfig {
                                 "/api/health/**",
                                 "/api/resources/search",
                                 "/api/resources/filter",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/uploads/thumbnails/**"
@@ -113,7 +124,7 @@ public class SecurityConfig {
             http.oauth2Login(oauth -> oauth
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler((request, response, exception) ->
-                            response.sendRedirect(frontendUrl + "/#/login?oauthError=true&errorMsg=" + java.net.URLEncoder.encode(exception.getMessage() != null ? exception.getMessage() : "unknown", "UTF-8")))
+                            response.sendRedirect(frontendLoginUrl + "?oauthError=true&errorMsg=" + java.net.URLEncoder.encode(exception.getMessage() != null ? exception.getMessage() : "unknown", "UTF-8")))
             );
         }
 
@@ -133,11 +144,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                frontendUrl,
-                "http://localhost:5173",
-                "http://127.0.0.1:5173"
-        ));
+        List<String> origins = new ArrayList<>();
+        if (allowedOrigins != null) {
+            Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(value -> !value.isBlank())
+                    .forEach(origins::add);
+        }
+        if (origins.isEmpty()) {
+            origins.add(frontendUrl);
+            origins.add("http://localhost:5173");
+            origins.add("http://127.0.0.1:5173");
+        }
+
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Content-Disposition", "Content-Type"));

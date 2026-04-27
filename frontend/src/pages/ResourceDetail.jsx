@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getResourceById, getResourceDownloadUrl, recordResourceView, resolveBackendUrl, saveResourceItem } from '../api/apiClient';
-import { Minus, ArrowLeft, Download as DownloadIcon, Star, BookOpen } from 'lucide-react';
+import { getResourceAvailability, getResourceById, getResourceDownloadUrl, recordResourceView, resolveBackendUrl, saveResourceItem } from '../api/apiClient';
+import { Minus, ArrowLeft, Download as DownloadIcon, Star, BookOpen, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Loader from '../components/ui/Loader';
 import { toast } from 'react-hot-toast';
 import { getUser } from '../hooks/useAuth';
+import { getResourceFallbackImage } from '../lib/resourceMedia';
 
 export default function ResourceDetail() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ export default function ResourceDetail() {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(false);
   const isAdmin = user?.role === 'ADMIN';
   const backPath = isAdmin ? '/admin/resources' : '/student/explore';
 
@@ -63,9 +65,14 @@ export default function ResourceDetail() {
     if (!resource) return;
 
     try {
+      const availability = await getResourceAvailability(resource.id);
+      if (!availability.downloadAvailable) {
+        toast.error('This file is missing from local storage. Please re-upload it from the admin panel.');
+        return;
+      }
       window.open(getResourceDownloadUrl(resource.id), '_blank', 'noopener,noreferrer');
     } catch {
-      // API layer handles errors
+      toast.error('Unable to open this resource right now.');
     }
   };
 
@@ -92,13 +99,12 @@ export default function ResourceDetail() {
       <section className="glass-panel p-6">
         <div className="grid gap-6 md:grid-cols-[280px_1fr]">
           <div className="relative overflow-hidden rounded-2xl bg-slate-800">
-            {resource.imageUrl ? (
-              <img src={resolveBackendUrl(resource.imageUrl)} alt={resource.title} className="h-64 w-full object-cover" />
-            ) : (
-              <div className="flex h-64 items-center justify-center text-slate-500">
-                <BookOpen className="h-12 w-12" />
-              </div>
-            )}
+            <img
+              src={resource.imageUrl && !imageError ? resolveBackendUrl(resource.imageUrl) : getResourceFallbackImage(resource)}
+              alt={resource.title}
+              onError={() => setImageError(true)}
+              className="h-64 w-full object-cover"
+            />
           </div>
 
           <div className="space-y-4">
@@ -119,6 +125,12 @@ export default function ResourceDetail() {
               <Button variant="primary" onClick={handleDownload}><DownloadIcon className="h-4 w-4" /> Download</Button>
               {!isAdmin ? <Button variant="secondary" onClick={handleSave} >Save</Button> : null}
             </div>
+            {resource.fileUrl?.startsWith('/uploads/') ? (
+              <p className="flex items-center gap-2 text-sm text-amber-300">
+                <AlertCircle className="h-4 w-4" />
+                This item uses local uploads. If the file was deleted from storage, it must be re-uploaded.
+              </p>
+            ) : null}
           </div>
         </div>
 

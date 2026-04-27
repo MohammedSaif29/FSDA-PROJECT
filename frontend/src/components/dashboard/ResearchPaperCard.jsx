@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Download, FileText } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import Button from '../ui/Button';
-import { getResourceDownloadUrl, resolveBackendUrl } from '../../api/apiClient';
+import { getResourceAvailability, getResourceDownloadUrl, resolveBackendUrl } from '../../api/apiClient';
+import { getResourceFallbackImage } from '../../lib/resourceMedia';
 
 const PAPER_IMAGE_FALLBACK = {
   ai: 'https://source.unsplash.com/400x300/?ai,research',
@@ -14,11 +16,16 @@ const getPaperImage = (resource) => {
   if (resource.imageUrl) return resolveBackendUrl(resource.imageUrl);
 
   const categoryKey = resource.category?.toLowerCase();
-  return PAPER_IMAGE_FALLBACK[categoryKey] || 'https://source.unsplash.com/400x300/?research,science';
+  return PAPER_IMAGE_FALLBACK[categoryKey] || getResourceFallbackImage(resource);
 };
 
 export default function ResearchPaperCard({ resource }) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    const availability = await getResourceAvailability(resource.id);
+    if (!availability.downloadAvailable) {
+      toast.error('This paper file is currently unavailable.');
+      return;
+    }
     window.open(getResourceDownloadUrl(resource.id), '_blank', 'noopener,noreferrer');
   };
 

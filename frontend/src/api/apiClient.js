@@ -6,9 +6,10 @@ import {
 } from '../hooks/useAuth';
 
 const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || '/api/auth';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
 });
 
 const authApi = axios.create({
@@ -22,10 +23,18 @@ const ensureAbsoluteUrl = (value) => {
   return `/${value}`;
 };
 
-const BACKEND_ORIGIN =
-  import.meta.env.VITE_API_BASE_URL && /^https?:\/\//i.test(import.meta.env.VITE_API_BASE_URL)
-    ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')
-    : window.location.origin;
+const BACKEND_ORIGIN = (() => {
+  const backendOrigin = import.meta.env.VITE_BACKEND_ORIGIN;
+  if (backendOrigin && /^https?:\/\//i.test(backendOrigin)) {
+    return backendOrigin.replace(/\/$/, '');
+  }
+
+  if (API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL)) {
+    return API_BASE_URL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+  }
+
+  return window.location.origin;
+})();
 
 export const resolveBackendUrl = (path) => {
   const normalizedPath = ensureAbsoluteUrl(path) || '/';
@@ -113,6 +122,11 @@ export const getGoogleAuthStatus = async () => {
 export const getGoogleLoginUrl = () => resolveBackendUrl('/oauth2/authorization/google');
 
 export const getResourceDownloadUrl = (resourceId) => resolveBackendUrl(`/api/resources/download/${resourceId}`);
+
+export const getResourceAvailability = async (resourceId) => {
+  const res = await api.get(`/resources/${resourceId}/availability`);
+  return res.data;
+};
 
 export const saveResourceItem = async (resourceId) => {
   const res = await api.post(`/save/${resourceId}`);
