@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/resources")
-@CrossOrigin(origins = "*")
+
 public class ResourceController {
     private static final Pattern NON_FILENAME_CHARS = Pattern.compile("[^a-zA-Z0-9._-]+");
 

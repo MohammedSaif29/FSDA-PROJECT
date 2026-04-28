@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/recommendations")
-@CrossOrigin(origins = "*")
+
 public class RecommendationController {
 
     private final RecommendationService recommendationService;
