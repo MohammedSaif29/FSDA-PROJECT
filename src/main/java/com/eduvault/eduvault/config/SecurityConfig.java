@@ -144,23 +144,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = new ArrayList<>();
-        if (allowedOrigins != null) {
-            Arrays.stream(allowedOrigins.split(","))
-                    .map(String::trim)
-                    .filter(value -> !value.isBlank())
-                    .forEach(origins::add);
-        }
-        if (origins.isEmpty()) {
-            origins.add(frontendUrl);
-            origins.add("http://localhost:5173");
-            origins.add("http://127.0.0.1:5173");
-        }
-
-        configuration.setAllowedOriginPatterns(origins);
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Content-Disposition", "Content-Type"));
+        configuration.setAllowedOrigins(List.of(
+            "https://fsad-project-frontend-djgt2hu4y-mohammedsaif29s-projects.vercel.app",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Content-Disposition", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
